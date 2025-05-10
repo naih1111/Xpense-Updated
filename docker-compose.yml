@@ -1,0 +1,71 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: budget-tracker-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./database/database.sqlite:/var/www/database/database.sqlite
+    networks:
+      - budget-tracker
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    container_name: budget-tracker-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+      
+    networks:
+      - budget-tracker
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: budget-tracker-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - budget-tracker
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: budget-tracker-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+    networks:
+      - budget-tracker
+    depends_on:
+      - db
+
+networks:
+  budget-tracker:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
