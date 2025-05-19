@@ -31,12 +31,11 @@ class InsightController extends Controller
         // Get top spending categories
         $topSpendingCategories = $this->getTopSpendingCategories($startDate, $endDate);
 
-        // Get recent expenses
+        // Get recent expenses with category relationship
         $recentExpenses = $user->expenses()
-            ->with('category')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->latest()
-            ->take(5)
+            ->with('category')  // Eager load the category relationship
+            ->latest('date')    // Order by date
+            ->take(5)          // Get only 5 records
             ->get();
         
         return view('insights.index', compact(
@@ -70,12 +69,12 @@ class InsightController extends Controller
         // Get top spending categories
         $topSpendingCategories = $this->getTopSpendingCategories($startDate, $endDate);
 
-        // Get recent expenses
+        // Get recent expenses with category relationship
         $recentExpenses = $user->expenses()
-            ->with('category')
+            ->with('category')  // Eager load the category relationship
             ->whereBetween('date', [$startDate, $endDate])
-            ->latest()
-            ->take(5)
+            ->latest('date')    // Order by date
+            ->take(5)          // Get only 5 records
             ->get();
         
         return view('insights.index', compact(
@@ -294,5 +293,21 @@ class InsightController extends Controller
         });
         
         return $data;
+    }
+
+    public function getCategoryData(Request $request)
+    {
+        $user = Auth::user();
+        
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
+        
+        $expensesByCategory = $this->getExpensesByCategory($startDate, $endDate);
+        $topSpendingCategories = $this->getTopSpendingCategories($startDate, $endDate);
+        
+        return response()->json([
+            'expensesByCategory' => $expensesByCategory,
+            'topSpendingCategories' => $topSpendingCategories,
+        ]);
     }
 } 

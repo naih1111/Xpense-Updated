@@ -28,6 +28,36 @@ class DashboardController extends Controller
             $totalIncome = $user->getTotalIncome($startDate, $endDate);
             $netSavings = $user->getNetSavings($startDate, $endDate);
             
+            // Calculate progress towards monthly income target if set
+            $monthlyIncomeTarget = $user->monthly_income;
+            $monthlyIncomeProgress = 0;
+            if ($monthlyIncomeTarget && $monthlyIncomeTarget > 0) {
+                $monthlyIncomeProgress = min(($totalIncome / $monthlyIncomeTarget) * 100, 100);
+            }
+
+            // Prepare notifications
+            $notifications = [];
+            
+            // Check if expenses exceed income
+            if ($totalExpenses > $totalIncome) {
+                $notifications[] = [
+                    'type' => 'warning',
+                    'icon' => 'fa-triangle-exclamation',
+                    'message' => 'Warning: Your expenses (₱' . number_format($totalExpenses, 2) . ') have exceeded your income (₱' . number_format($totalIncome, 2) . ') this month.',
+                    'time' => now()->format('M d, Y h:i A')
+                ];
+            }
+
+            // Check if expenses are approaching income (80% threshold)
+            elseif ($totalIncome > 0 && ($totalExpenses / $totalIncome) >= 0.8) {
+                $notifications[] = [
+                    'type' => 'alert',
+                    'icon' => 'fa-bell',
+                    'message' => 'Alert: Your expenses are ' . number_format(($totalExpenses / $totalIncome) * 100, 1) . '% of your income this month.',
+                    'time' => now()->format('M d, Y h:i A')
+                ];
+            }
+
             // Get recent transactions with eager loading
             $recentExpenses = $user->expenses()
                 ->with('category')
@@ -80,7 +110,10 @@ class DashboardController extends Controller
                 'recentExpenses',
                 'recentIncomes',
                 'financialGoals',
-                'recentTransactions'
+                'recentTransactions',
+                'monthlyIncomeTarget',
+                'monthlyIncomeProgress',
+                'notifications'
             ));
         } catch (\Exception $e) {
             Log::error('Dashboard Error: ' . $e->getMessage(), [
@@ -96,6 +129,7 @@ class DashboardController extends Controller
             $recentIncomes = collect();
             $financialGoals = collect();
             $recentTransactions = collect();
+            $notifications = [];
             
             return view('dashboard', compact(
                 'totalExpenses',
@@ -104,7 +138,8 @@ class DashboardController extends Controller
                 'recentExpenses',
                 'recentIncomes',
                 'financialGoals',
-                'recentTransactions'
+                'recentTransactions',
+                'notifications'
             ))->with('error', 'Unable to load dashboard data. Please try again later.');
         }
     }

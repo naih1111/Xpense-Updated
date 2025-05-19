@@ -12,6 +12,10 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     default-mysql-client
 
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -35,6 +39,9 @@ COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 
 # Install dependencies
 RUN composer install --no-scripts
+
+# Install NPM dependencies and build assets
+RUN npm install && npm run build
 
 # Generate application key
 RUN php artisan key:generate

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class FinancialGoal extends Model
 {
@@ -24,6 +26,79 @@ class FinancialGoal extends Model
         'target_amount' => 'decimal:2',
         'current_amount' => 'decimal:2',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($goal) {
+            $validator = Validator::make($goal->toArray(), [
+                'name' => 'required|string|max:255',
+                'target_amount' => 'required|numeric|min:0',
+                'current_amount' => 'required|numeric|min:0',
+                'target_date' => 'required|date|after:today',
+            ]);
+
+            if ($validator->fails()) {
+                throw ValidationException::withMessages($validator->errors()->toArray());
+            }
+
+            if ($goal->current_amount > $goal->target_amount) {
+                throw ValidationException::withMessages([
+                    'current_amount' => ['Current amount cannot be greater than target amount.'],
+                ]);
+            }
+        });
+
+        static::created(function ($goal) {
+            if ($goal->current_amount > 0) {
+                $goal->user->expenses()->create([
+                    'amount' => $goal->current_amount,
+                    'description' => "Financial Goal: {$goal->name}",
+                    'type' => 'saving',
+                    'date' => now(),
+                ]);
+            }
+        });
+
+        static::updating(function ($goal) {
+            if ($goal->isDirty('current_amount')) {
+                $oldAmount = $goal->getOriginal('current_amount');
+                $newAmount = $goal->current_amount;
+
+                if ($newAmount > $goal->target_amount) {
+                    throw ValidationException::withMessages([
+                        'current_amount' => ['Current amount cannot be greater than target amount.'],
+                    ]);
+                }
+
+                // Update or create the associated expense
+                $expense = $goal->user->expenses()
+                    ->where('type', 'saving')
+                    ->where('description', 'like', "%{$goal->name}%")
+                    ->first();
+
+                if ($expense) {
+                    $expense->update(['amount' => $newAmount]);
+                } else {
+                    $goal->user->expenses()->create([
+                        'amount' => $newAmount,
+                        'description' => "Financial Goal: {$goal->name}",
+                        'type' => 'saving',
+                        'date' => now(),
+                    ]);
+                }
+            }
+        });
+
+        static::deleted(function ($goal) {
+            // Delete associated expense when goal is deleted
+            $goal->user->expenses()
+                ->where('type', 'saving')
+                ->where('description', 'like', "%{$goal->name}%")
+                ->delete();
+        });
+    }
 
     public function user()
     {

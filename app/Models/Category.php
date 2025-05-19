@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class Category extends Model
 {
@@ -15,6 +17,23 @@ class Category extends Model
         'type',
         'user_id',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($category) {
+            $validator = Validator::make($category->toArray(), [
+                'name' => 'required|string|max:255',
+                'type' => 'required|in:income,expense',
+                'description' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                throw ValidationException::withMessages($validator->errors()->toArray());
+            }
+        });
+    }
 
     public function user()
     {

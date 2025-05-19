@@ -12,6 +12,7 @@ class ExpenseController extends Controller
     public function index()
     {
         $expenses = Auth::user()->expenses()
+            ->with('category')
             ->latest()
             ->paginate(10);
             
@@ -20,12 +21,17 @@ class ExpenseController extends Controller
 
     public function create()
     {
-        return view('expenses.create');
+        $categories = Auth::user()->categories()
+            ->where('type', 'expense')
+            ->get();
+            
+        return view('expenses.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'type' => 'required|in:need,want,saving',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string|max:255',
@@ -41,7 +47,12 @@ class ExpenseController extends Controller
     public function edit(Expense $expense)
     {
         $this->authorize('update', $expense);
-        return view('expenses.edit', compact('expense'));
+        
+        $categories = Auth::user()->categories()
+            ->where('type', 'expense')
+            ->get();
+            
+        return view('expenses.edit', compact('expense', 'categories'));
     }
 
     public function update(Request $request, Expense $expense)
@@ -49,6 +60,7 @@ class ExpenseController extends Controller
         $this->authorize('update', $expense);
 
         $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'type' => 'required|in:need,want,saving',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string|max:255',

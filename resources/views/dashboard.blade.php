@@ -12,6 +12,8 @@
 <head>
   <meta charset="UTF-8">
   <title>XPENSE Dashboard</title>
+  <!-- Add Font Awesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     * {
       box-sizing: border-box;
@@ -22,9 +24,10 @@
 
     body {
       display: flex;
-      height: 100vh;
+      min-height: 100vh;
       background-color: #e6eaf5;
       color: #0a0a23;
+      overflow-x: hidden;
     }
 
     aside {
@@ -35,6 +38,9 @@
       flex-direction: column;
       align-items: center;
       padding-top: 40px;
+      position: fixed;
+      height: 100vh;
+      overflow: hidden;
     }
 
     aside img {
@@ -53,6 +59,7 @@
       flex-direction: column;
       width: 100%;
       padding: 0 20px;
+      height: calc(100% - 180px);
     }
 
     nav a {
@@ -64,22 +71,45 @@
       border-radius: 8px;
       margin-bottom: 15px;
       text-decoration: none;
+      transition: all 0.3s ease;
     }
 
-    nav a:nth-child(1) {
+    nav a:hover {
       background-color: #7e74f1;
     }
 
-    nav a:nth-child(3) {
-      border: 2px solid #7e74f1;
+    nav a.active {
+      background-color: #7e74f1;
+    }
+
+    nav .bottom-section {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    nav form button.btn-secondary {
+      width: 100%;
       background-color: transparent;
+      border: 2px solid #7e74f1;
       color: #7e74f1;
+      padding: 12px;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    nav form button.btn-secondary:hover {
+      background-color: rgba(126, 116, 241, 0.1);
     }
 
     main {
       flex: 1;
+      margin-left: 260px;
       padding: 40px;
-      position: relative;
     }
 
     .header {
@@ -508,23 +538,21 @@
     
       <!-- Sidebar -->
       <aside>
-        <img src="images/XPENSELosgz (2).png" alt="XPENSE Logo">
+        <img src="{{ asset('images/XPENSELosgz (2).png') }}" alt="XPENSE Logo">
         <h1>XPENSE</h1>
-        <nav style="display: flex; flex-direction: column; height: 100%;">
-          <div style="flex: 1;">
-            <a href="{{ route('dashboard') }}" style="display: block; background-color: #4f5ebd; color: white; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 15px; text-decoration: none;">Home</a>
-            <a href="{{ route('expenses.index') }}" style="display: block; background-color: #4f5ebd; color: white; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 15px; text-decoration: none;">Expenses</a>
-            <a href="{{ route('incomes.index') }}" style="display: block; background-color: #4f5ebd; color: white; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 15px; text-decoration: none;">Income</a>
-            <a href="{{ route('financial-goals.index') }}" style="display: block; background-color: #4f5ebd; color: white; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 15px; text-decoration: none;">Goals</a>
-            <a href="{{ route('insights.index') }}" style="display: block; background-color: #4f5ebd; color: white; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 15px; text-decoration: none;">Reports</a>
+        <nav>
+          <div>
+            <a href="{{ route('dashboard') }}" class="active">Home</a>
+            <a href="{{ route('expenses.index') }}">Expenses</a>
+            <a href="{{ route('incomes.index') }}">Income</a>
+            <a href="{{ route('financial-goals.index') }}">Goals</a>
+            <a href="{{ route('insights.index') }}">Report</a>
           </div>
-          <div style="margin-top: auto; padding-bottom: 20px;">
-            <a href="{{ route('profile.edit') }}" style="display: block; width: 100%; text-align: left; background-color: transparent; border: 2px solid #7e74f1; color: #7e74f1; padding: 12px; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">My Profile</a>
-            <form method="POST" action="{{ route('logout') }}" style="width: 100%; margin-top: 15px;">
+          <div class="bottom-section">
+            <a href="{{ route('profile.edit') }}" class="btn-secondary">My Profile</a>
+            <form method="POST" action="{{ route('logout') }}">
               @csrf
-              <button type="submit" style="width: 100%; text-align: left; background-color: transparent; border: 2px solid #7e74f1; color: #7e74f1; padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">
-                Logout
-              </button>
+              <button type="submit" class="btn-secondary">Logout</button>
             </form>
           </div>
         </nav>
@@ -616,22 +644,28 @@
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="notification-badge">3</span>
+                        @if(count($notifications) > 0)
+                        <span class="notification-badge">{{ count($notifications) }}</span>
+                        @endif
                     </div>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-header">
                             Notifications
                         </div>
                         <div class="notification-list">
-                            <div class="notification-item">
-                                You've exceeded your budget limit for this month.
+                            @forelse($notifications as $notification)
+                            <div class="notification-item {{ $notification['type'] }}">
+                                <i class="fas {{ $notification['icon'] }}"></i>
+                                <div class="notification-content">
+                                    <p class="notification-message">{{ $notification['message'] }}</p>
+                                    <span class="notification-time">{{ $notification['time'] }}</span>
+                                </div>
                             </div>
+                            @empty
                             <div class="notification-item">
-                                New expense recorded: Groceries ₱1,500
+                                <p>No new notifications</p>
                             </div>
-                            <div class="notification-item">
-                                You're close to reaching your savings goal!
-                            </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -661,18 +695,24 @@
       @if($recentIncomes->isNotEmpty())
       <div class="card">
         <div class="dots">⋮</div>
-        <div class="card-title">Total Income</div>
+        <div class="card-title">
+          <i class="fas fa-wallet"></i> Total Income
+        </div>
         <div class="card-value">₱{{ number_format($income, 2) }}</div>
       </div>
       @endif
       <div class="card">
         <div class="dots">⋮</div>
-        <div class="card-title">Total Expenses</div>
+        <div class="card-title">
+          <i class="fas fa-shopping-cart"></i> Total Expenses
+        </div>
         <div class="card-value">₱{{ number_format($expenses, 2) }}</div>
       </div>
-      <div class="card">
+      <div class="card {{ $netSavings < 0 ? 'negative-savings' : '' }}">
         <div class="dots">⋮</div>
-        <div class="card-title">Net Savings</div>
+        <div class="card-title">
+          <i class="fas fa-piggy-bank"></i> Net Savings
+        </div>
         <div class="card-value">₱{{ number_format($netSavings, 2) }}</div>
       </div>
     </div>
@@ -747,6 +787,33 @@
         padding: 10px;
         font-size: 13px;
       }
+
+      /* Add this to your existing styles */
+      .negative-savings {
+        background-color: #ef4444 !important;
+      }
+      
+      .negative-savings .card-value,
+      .negative-savings .card-title,
+      .negative-savings h3,
+      .negative-savings .summary-value,
+      .negative-savings .summary-period {
+        color: white !important;
+      }
+      
+      .negative-savings .summary-icon {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+      }
+
+      /* Add this to your existing styles */
+      .card-title i {
+        margin-right: 8px;
+      }
+
+      .summary-icon i {
+        font-size: 24px;
+      }
     </style>
 
     <div class="main-content">
@@ -756,18 +823,32 @@
           <div class="summary-grid">
             <div class="summary-card">
               <div class="summary-icon income">
-                <i class="fas fa-arrow-up"></i>
+                <i class="fas fa-wallet"></i>
               </div>
               <div class="summary-info">
                 <h3>Monthly Income</h3>
                 <p class="summary-value">₱{{ number_format($income, 2) }}</p>
                 <p class="summary-period">This Month</p>
+                @if(Auth::user()->monthly_income && Auth::user()->monthly_income > 0)
+                <div class="progress-container mt-2">
+                  <div class="progress-bar">
+                    <div class="progress" style="width: {{ $monthlyIncomeProgress }}%"></div>
+                  </div>
+                  <p class="progress-text text-sm mt-1">
+                    {{ number_format($monthlyIncomeProgress, 1) }}% of ₱{{ number_format(Auth::user()->monthly_income, 2) }} target
+                  </p>
+                </div>
+                @else
+                <p class="progress-text text-sm mt-1">
+                  Set a monthly income target in your profile to track progress
+                </p>
+                @endif
               </div>
             </div>
 
             <div class="summary-card">
               <div class="summary-icon expense">
-                <i class="fas fa-arrow-down"></i>
+                <i class="fas fa-shopping-cart"></i>
               </div>
               <div class="summary-info">
                 <h3>Monthly Expenses</h3>
@@ -776,7 +857,7 @@
               </div>
             </div>
 
-            <div class="summary-card">
+            <div class="summary-card {{ $netSavings < 0 ? 'negative-savings' : '' }}">
               <div class="summary-icon savings">
                 <i class="fas fa-piggy-bank"></i>
               </div>
@@ -784,6 +865,11 @@
                 <h3>Net Savings</h3>
                 <p class="summary-value">₱{{ number_format($netSavings, 2) }}</p>
                 <p class="summary-period">This Month</p>
+                @if($netSavings < 0)
+                <p class="text-sm text-white mt-1">
+                  Warning: Expenses exceed income
+                </p>
+                @endif
               </div>
             </div>
 
@@ -998,8 +1084,46 @@
     }
 
     .summary-period {
-      font-size: 12px;
       color: #6b7280;
+      font-size: 14px;
+    }
+
+    .progress-container {
+      margin-top: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background-color: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #7e74f1;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .mt-1 {
+      margin-top: 0.25rem;
+    }
+
+    .mt-2 {
+      margin-top: 0.5rem;
+    }
+
+    .text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
     }
 
     .recent-activity {
@@ -1087,6 +1211,16 @@
       .summary-grid {
         grid-template-columns: 1fr;
       }
+    }
+
+    /* Add this to your existing styles */
+    .text-red-500 {
+      color: #ef4444 !important;
+    }
+    
+    .card .card-value.text-red-500,
+    .summary-card .summary-value.text-red-500 {
+      color: #ef4444 !important;
     }
   </style>
 </body>

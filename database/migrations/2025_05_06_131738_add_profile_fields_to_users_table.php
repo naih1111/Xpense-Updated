@@ -12,7 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->string('currency_preference')->default('PHP');
+            $table->string('profile_picture')->nullable();
+            $table->text('bio')->nullable();
+            $table->string('occupation')->nullable();
+            $table->string('location')->nullable();
         });
     }
 
@@ -22,7 +26,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropColumn([
+                'currency_preference',
+                'profile_picture',
+                'bio',
+                'occupation',
+                'location'
+            ]);
         });
     }
 };

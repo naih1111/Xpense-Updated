@@ -6,6 +6,16 @@
         <h1 class="text-2xl font-bold text-gray-800">Add New Expense</h1>
     </div>
 
+    @php
+        $categories = Auth::user()->categories()->get();
+    @endphp
+
+    @if($categories->isEmpty())
+        <div class="alert alert-warning">
+            No categories found. Please create some categories first.
+        </div>
+    @endif
+
     <div class="form-container">
         <form method="POST" action="{{ route('expenses.store') }}" class="space-y-6">
             @csrf
@@ -21,6 +31,24 @@
                     </select>
                 </div>
                 @error('type')
+                    <p class="error-message">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Category Selection -->
+            <div class="form-group">
+                <label for="category_id" class="form-label">Category</label>
+                <div class="select-wrapper">
+                    <select name="category_id" id="category_id" class="form-input" required>
+                        <option value="">Select a category</option>
+                        @foreach($categories->where('type', 'expense') as $category)
+                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @error('category_id')
                     <p class="error-message">{{ $message }}</p>
                 @enderror
             </div>
@@ -131,6 +159,7 @@
         border-radius: 0.5rem;
         font-size: 0.875rem;
         transition: all 0.2s;
+        appearance: none;
     }
 
     .form-input:focus {
@@ -151,9 +180,9 @@
         transform: translateY(-50%);
         width: 0;
         height: 0;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-top: 5px solid #64748b;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid #64748b;
         pointer-events: none;
     }
 
@@ -212,6 +241,19 @@
 
     .btn-secondary:hover {
         background-color: #f8fafc;
+    }
+
+    .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+    }
+
+    .alert-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+        border: 1px solid #f59e0b;
     }
 </style>
 @endpush

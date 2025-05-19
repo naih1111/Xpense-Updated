@@ -32,7 +32,20 @@ class FinancialGoalController extends Controller
             'target_date' => 'required|date|after:today',
         ]);
 
-        $financialGoal = auth()->user()->financialGoals()->create($validated);
+        $user = auth()->user();
+
+        // First, create the financial goal
+        $financialGoal = $user->financialGoals()->create($validated);
+
+        // Then, create an expense record for the initial amount
+        if ($validated['current_amount'] > 0) {
+            $user->expenses()->create([
+                'amount' => $validated['current_amount'],
+                'description' => "Initial allocation for financial goal: {$financialGoal->name}",
+                'date' => now(),
+                'type' => 'saving',
+            ]);
+        }
 
         return redirect()->route('financial-goals.index')
             ->with('success', 'Financial goal created successfully.');
@@ -66,10 +79,21 @@ class FinancialGoalController extends Controller
     {
         $this->authorize('delete', $financialGoal);
         
+        // If there's a current amount in the goal, subtract it from expenses
+        if ($financialGoal->current_amount > 0) {
+            $user = auth()->user();
+
+            // Find and delete all expense records related to this financial goal
+            $user->expenses()
+                ->where('type', 'saving')
+                ->where('description', 'like', "%{$financialGoal->name}%")
+                ->delete();
+        }
+        
         $financialGoal->delete();
 
         return redirect()->route('financial-goals.index')
-            ->with('success', 'Financial goal deleted successfully.');
+            ->with('success', 'Financial goal deleted successfully. The allocated funds have been removed from expenses.');
     }
 
     public function updateProgress(Request $request, FinancialGoal $goal)
@@ -80,9 +104,20 @@ class FinancialGoalController extends Controller
             'amount' => 'required|numeric|min:0',
         ]);
 
+        $previousAmount = $goal->current_amount;
         $goal->current_amount += $validated['amount'];
         $goal->updateStatus();
         $goal->save();
+
+        // Create an expense record for the additional amount
+        if ($validated['amount'] > 0) {
+            auth()->user()->expenses()->create([
+                'amount' => $validated['amount'],
+                'description' => "Additional allocation for financial goal: {$goal->name}",
+                'date' => now(),
+                'type' => 'saving',
+            ]);
+        }
 
         return redirect()->route('financial-goals.index')
             ->with('success', 'Goal progress updated successfully.');

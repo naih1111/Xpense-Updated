@@ -12,71 +12,68 @@
             @csrf
             
             <div class="form-group">
-                <label for="name">{{ __('Goal Name') }}</label>
+                <label for="name" class="form-label">{{ __('Goal Name') }}</label>
                 <input type="text" id="name" name="name" value="{{ old('name') }}" required 
                     placeholder="{{ __('e.g., Save for Emergency Fund') }}"
-                    class="@error('name') error @enderror">
+                    class="form-input @error('name') error @enderror">
                 @error('name')
                     <span class="error-message">{{ $message }}</span>
                 @enderror
             </div>
 
             <div class="form-group">
-                <label for="description">{{ __('Description') }}</label>
+                <label for="description" class="form-label">{{ __('Description') }}</label>
                 <textarea id="description" name="description" rows="3" 
                     placeholder="{{ __('Describe your goal and why it\'s important') }}"
-                    class="@error('description') error @enderror">{{ old('description') }}</textarea>
+                    class="form-input @error('description') error @enderror">{{ old('description') }}</textarea>
                 @error('description')
                     <span class="error-message">{{ $message }}</span>
                 @enderror
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="target_amount">{{ __('Target Amount') }}</label>
-                    <div class="input-with-icon">
-                        <span class="currency-symbol">₱</span>
-                        <input type="number" id="target_amount" name="target_amount" 
-                            value="{{ old('target_amount') }}" required min="0" step="0.01"
-                            placeholder="0.00"
-                            class="@error('target_amount') error @enderror">
-                    </div>
-                    @error('target_amount')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
+            <div class="form-group">
+                <label for="target_amount" class="form-label">{{ __('Target Amount') }}</label>
+                <div class="currency-input">
+                    <span class="currency-symbol">₱</span>
+                    <input type="number" id="target_amount" name="target_amount" step="0.01" 
+                        value="{{ old('target_amount') }}" required 
+                        placeholder="0.00"
+                        class="form-input @error('target_amount') error @enderror">
                 </div>
-
-                <div class="form-group">
-                    <label for="current_amount">{{ __('Current Amount') }}</label>
-                    <div class="input-with-icon">
-                        <span class="currency-symbol">₱</span>
-                        <input type="number" id="current_amount" name="current_amount" 
-                            value="{{ old('current_amount', 0) }}" required min="0" step="0.01"
-                            placeholder="0.00"
-                            class="@error('current_amount') error @enderror">
-                    </div>
-                    @error('current_amount')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
-                </div>
+                @error('target_amount')
+                    <span class="error-message">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="target_date">{{ __('Target Date') }}</label>
+                <label for="current_amount" class="form-label">{{ __('Initial Amount') }}</label>
+                <div class="currency-input">
+                    <span class="currency-symbol">₱</span>
+                    <input type="number" id="current_amount" name="current_amount" step="0.01" 
+                        value="{{ old('current_amount', 0) }}" required 
+                        placeholder="0.00"
+                        class="form-input @error('current_amount') error @enderror">
+                </div>
+                @error('current_amount')
+                    <span class="error-message">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="target_date" class="form-label">{{ __('Target Date') }}</label>
                 <input type="date" id="target_date" name="target_date" 
-                    value="{{ old('target_date') }}" required
-                    min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                    class="@error('target_date') error @enderror">
+                    value="{{ old('target_date') }}" required 
+                    class="form-input @error('target_date') error @enderror">
                 @error('target_date')
                     <span class="error-message">{{ $message }}</span>
                 @enderror
             </div>
 
             <div class="form-actions">
-                <a href="{{ route('financial-goals.index') }}" class="cancel-button">
+                <a href="{{ route('financial-goals.index') }}" class="btn btn-secondary">
                     {{ __('Cancel') }}
                 </a>
-                <button type="submit" class="submit-button">
+                <button type="submit" class="btn btn-primary">
                     {{ __('Create Goal') }}
                 </button>
             </div>

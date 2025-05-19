@@ -27,7 +27,7 @@
         <div class="card income">
             <div class="card-content">
                 <div class="card-icon">
-                    <i class="fas fa-arrow-up"></i>
+                    <i class="fas fa-wallet"></i>
                 </div>
                 <div class="card-info">
                     <h3>{{ __('Total Income') }}</h3>
@@ -42,7 +42,7 @@
         <div class="card expenses">
             <div class="card-content">
                 <div class="card-icon">
-                    <i class="fas fa-arrow-down"></i>
+                    <i class="fas fa-shopping-cart"></i>
                 </div>
                 <div class="card-info">
                     <h3>{{ __('Total Expenses') }}</h3>
@@ -57,7 +57,7 @@
         <div class="card balance {{ $incomeVsExpenses['balance'] >= 0 ? 'positive' : 'negative' }}">
             <div class="card-content">
                 <div class="card-icon">
-                    <i class="fas fa-balance-scale"></i>
+                    <i class="fas fa-piggy-bank"></i>
                 </div>
                 <div class="card-info">
                     <h3>{{ __('Net Balance') }}</h3>
@@ -85,8 +85,13 @@
                 <h3>{{ __('Expenses by Category') }}</h3>
             </div>
             <div class="chart-content">
+                <div class="charts-grid">
                 <div class="chart-wrapper" style="height: 300px;">
                     <canvas id="expensesByCategoryChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper" style="height: 300px;">
+                        <canvas id="expensesByCategoryBarChart"></canvas>
+                    </div>
                 </div>
                 <div class="categories-table" style="margin-top: 20px;">
                     <div class="table-header">
@@ -111,7 +116,7 @@
                                         <td>
                                             <div class="category-info">
                                                 <div class="category-icon">
-                                                    <i class="fas fa-shopping-cart"></i>
+                                                    <i class="fas fa-tag"></i>
                                                 </div>
                                                 <span>{{ $category['name'] }}</span>
                                             </div>
@@ -163,9 +168,9 @@
                                         <td>
                                             <div class="category-info">
                                                 <div class="category-icon">
-                                                    <i class="fas fa-shopping-cart"></i>
+                                                    <i class="fas fa-tag"></i>
                                                 </div>
-                                                <span>{{ $expense->category }}</span>
+                                                <span>{{ $expense->category->name ?? 'Uncategorized' }}</span>
                                             </div>
                                         </td>
                                         <td>₱{{ number_format($expense->amount, 2) }}</td>
@@ -494,12 +499,30 @@
         height: 1.5rem;
         font-size: 0.75rem;
     }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    let expensesByCategoryChart;
+    let expensesByCategoryBarChart;
+    let updateInterval;
+
+    function initializeCharts() {
     // Monthly Spending Trend Chart
     const monthlySpendingCtx = document.getElementById('monthlySpendingChart').getContext('2d');
     new Chart(monthlySpendingCtx, {
@@ -540,9 +563,9 @@
         }
     });
 
-    // Expenses by Category Chart
+        // Expenses by Category Doughnut Chart
     const expensesByCategoryCtx = document.getElementById('expensesByCategoryChart').getContext('2d');
-    new Chart(expensesByCategoryCtx, {
+        expensesByCategoryChart = new Chart(expensesByCategoryCtx, {
         type: 'doughnut',
         data: {
             labels: {!! json_encode(array_column($expensesByCategory, 'name')) !!},
@@ -571,10 +594,145 @@
                         font: {
                             size: 12
                         }
-                    }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribution of Expenses',
+                            font: {
+                                size: 14
                 }
             }
         }
+                }
+            }
+        });
+
+        // Expenses by Category Bar Chart
+        const expensesByCategoryBarCtx = document.getElementById('expensesByCategoryBarChart').getContext('2d');
+        expensesByCategoryBarChart = new Chart(expensesByCategoryBarCtx, {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode(array_column($expensesByCategory, 'name')) !!},
+                datasets: [{
+                    label: 'Amount',
+                    data: {!! json_encode(array_column($expensesByCategory, 'amount')) !!},
+                    backgroundColor: 'rgba(79, 94, 189, 0.7)',
+                    borderColor: '#4f5ebd',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Expense Amounts by Category',
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + number_format(value, 0);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCategoryData() {
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const endDate = document.querySelector('input[name="end_date"]').value;
+
+        fetch(`/insights/category-data?start_date=${startDate}&end_date=${endDate}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update doughnut chart
+                expensesByCategoryChart.data.labels = data.expensesByCategory.map(category => category.name);
+                expensesByCategoryChart.data.datasets[0].data = data.expensesByCategory.map(category => category.amount);
+                expensesByCategoryChart.update();
+
+                // Update bar chart
+                expensesByCategoryBarChart.data.labels = data.expensesByCategory.map(category => category.name);
+                expensesByCategoryBarChart.data.datasets[0].data = data.expensesByCategory.map(category => category.amount);
+                expensesByCategoryBarChart.update();
+
+                // Update table
+                const tableBody = document.querySelector('.categories-table tbody');
+                const totalExpenses = data.topSpendingCategories.reduce((sum, category) => sum + category.amount, 0);
+                
+                tableBody.innerHTML = data.topSpendingCategories.map(category => `
+                    <tr>
+                        <td>
+                            <div class="category-info">
+                                <div class="category-icon">
+                                    <i class="fas fa-tag"></i>
+                                </div>
+                                <span>${category.name}</span>
+                            </div>
+                        </td>
+                        <td>₱${number_format(category.amount, 2)}</td>
+                        <td>${totalExpenses > 0 ? number_format((category.amount / totalExpenses) * 100, 1) : 0}%</td>
+                        <td>
+                            <div class="trend-indicator">
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: ${totalExpenses > 0 ? (category.amount / totalExpenses) * 100 : 0}%"></div>
+                                </div>
+                                <span class="trend-value ${category.trend >= 0 ? 'positive' : 'negative'}">
+                                    <i class="fas fa-arrow-${category.trend >= 0 ? 'up' : 'down'}"></i>
+                                    ${category.trend >= 0 ? '+' : ''}${number_format(category.trend, 1)}%
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => console.error('Error updating category data:', error));
+    }
+
+    function number_format(number, decimals) {
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }).format(number);
+    }
+
+    // Initialize charts when the page loads
+    initializeCharts();
+
+    // Update data every 30 seconds
+    updateInterval = setInterval(updateCategoryData, 30000);
+
+    // Update when date filters change
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.addEventListener('change', () => {
+            clearInterval(updateInterval);
+            updateCategoryData();
+            updateInterval = setInterval(updateCategoryData, 30000);
+        });
+    });
+
+    // Clean up interval when leaving the page
+    window.addEventListener('beforeunload', () => {
+        clearInterval(updateInterval);
     });
 </script>
 @endpush

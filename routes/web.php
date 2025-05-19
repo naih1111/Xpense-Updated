@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     // Insights
     Route::get('/insights', [InsightController::class, 'index'])->name('insights.index');
     Route::get('/insights/filter', [InsightController::class, 'filter'])->name('insights.filter');
+    Route::get('/insights/category-data', [InsightController::class, 'getCategoryData'])->name('insights.category-data');
     
     // Password
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
