@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\InsightController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -39,9 +40,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Profile routes
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [App\Http\Controllers\Auth\ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [App\Http\Controllers\Auth\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\Auth\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [App\Http\Controllers\Auth\ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Expense routes
     Route::resource('expenses', ExpenseController::class);
@@ -68,6 +70,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/insights', [InsightController::class, 'index'])->name('insights.index');
     Route::get('/insights/filter', [InsightController::class, 'filter'])->name('insights.filter');
     Route::get('/insights/category-data', [InsightController::class, 'getCategoryData'])->name('insights.category-data');
+    
+    // Reports
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/expenses/monthly', [ReportController::class, 'monthlyExpenses'])->name('reports.expenses.monthly');
+    Route::get('/reports/incomes/monthly', [ReportController::class, 'monthlyIncomes'])->name('reports.incomes.monthly');
+    Route::get('/reports/goals', [ReportController::class, 'goalProgress'])->name('reports.goals');
+    Route::get('/reports/goals/progress', [ReportController::class, 'goalProgress'])->name('reports.goals.progress');
+    Route::get('/reports/expenses/custom', [ReportController::class, 'customDateRange'])->name('reports.expenses.custom');
+    Route::get('/reports/expenses/export/pdf', [ReportController::class, 'exportExpensesPdf'])->name('reports.expenses.export.pdf');
+    Route::get('/reports/expenses/export/excel', [ReportController::class, 'exportExpensesExcel'])->name('reports.expenses.export.excel');
     
     // Password
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');

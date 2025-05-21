@@ -15,11 +15,14 @@ class Goal extends Model
         'description',
         'target_amount',
         'current_amount',
-        'target_date',
+        'status',
+        'target_date'
     ];
 
     protected $casts = [
         'target_date' => 'date',
+        'target_amount' => 'decimal:2',
+        'current_amount' => 'decimal:2'
     ];
 
     public function user()

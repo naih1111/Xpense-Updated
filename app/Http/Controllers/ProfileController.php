@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use App\Models\Budget;
+use App\Models\Goal;
+use App\Models\Expense;
+use App\Models\Activity;
 
 class ProfileController extends Controller
 {
@@ -76,5 +80,22 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function index()
+    {
+        $user = auth()->user();
+        
+        $data = [
+            'budgetsCount' => Budget::where('user_id', $user->id)->count(),
+            'goalsCount' => Goal::where('user_id', $user->id)->where('status', 'active')->count(),
+            'totalExpenses' => Expense::where('user_id', $user->id)->sum('amount'),
+            'recentActivities' => Activity::where('user_id', $user->id)
+                ->latest()
+                ->take(5)
+                ->get()
+        ];
+
+        return view('profile.index', $data);
     }
 } 
