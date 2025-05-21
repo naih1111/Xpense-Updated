@@ -38,6 +38,7 @@
                     <input type="number" id="target_amount" name="target_amount" step="0.01" 
                         value="{{ old('target_amount') }}" required 
                         placeholder="0.00"
+                        min="0.01"
                         class="form-input @error('target_amount') error @enderror">
                 </div>
                 @error('target_amount')
@@ -50,8 +51,9 @@
                 <div class="currency-input">
                     <span class="currency-symbol">₱</span>
                     <input type="number" id="current_amount" name="current_amount" step="0.01" 
-                        value="{{ old('current_amount', 0) }}" required 
+                        value="{{ old('current_amount') }}" required 
                         placeholder="0.00"
+                        min="0.01"
                         class="form-input @error('current_amount') error @enderror">
                 </div>
                 @error('current_amount')
@@ -153,10 +155,13 @@
         top: 50%;
         transform: translateY(-50%);
         color: #718096;
+        font-size: 1rem;
+        font-weight: bold;
+        z-index: 1;
     }
 
-    .input-with-icon input {
-        padding-left: 1.75rem;
+    .currency-input input {
+        padding-left: 2rem;
     }
 
     .error {

@@ -57,7 +57,7 @@
                     <div class="goal-footer">
                         <span class="goal-date">Target: {{ $goal->target_date->format('M d, Y') }}</span>
                         <span class="goal-status {{ $goal->status === 'completed' ? 'status-completed' : 'status-in-progress' }}">
-                            {{ ucfirst($goal->status) }}
+                            {{ str_replace('_', ' ', ucfirst($goal->status)) }}
                         </span>
                     </div>
                 </div>

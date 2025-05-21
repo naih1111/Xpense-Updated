@@ -9,9 +9,25 @@
         </p>
     </header>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-8 space-y-8">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-8 space-y-8" id="profile-update-form">
         @csrf
         @method('patch')
+
+        @if (session('status') === 'profile-updated')
+            <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                {{ __('Profile updated successfully.') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <div class="space-y-6">
             <div class="space-y-2">
@@ -45,7 +61,7 @@
         </div>
 
         <div class="flex items-center justify-end">
-            <x-primary-button class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+            <x-primary-button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
                 {{ __('Save Changes') }}
             </x-primary-button>
         </div>

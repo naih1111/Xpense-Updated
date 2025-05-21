@@ -26,19 +26,6 @@
                     </div>
                 </div>
 
-                <!-- Update Password -->
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="p-3 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl shadow-sm">
-                            <span class="material-icons text-2xl text-purple-600">lock</span>
-                        </div>
-                        <h3 class="text-2xl font-semibold text-gray-900">Update Password</h3>
-                    </div>
-                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg">
-                        @include('profile.partials.update-password-form')
-                    </div>
-                </div>
-
                 <!-- Delete Account -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">

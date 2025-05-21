@@ -27,7 +27,7 @@ class IncomeController extends Controller
     {
         try {
             $validated = $request->validate([
-                'amount' => 'required|numeric|min:0',
+                'amount' => 'required|numeric|min:0.01',
                 'description' => 'required|string|max:255',
                 'date' => 'required|date',
             ]);

@@ -24,7 +24,25 @@ class ExpenseController extends Controller
         $categories = Auth::user()->categories()
             ->where('type', 'expense')
             ->get();
-            
+
+        if ($categories->isEmpty()) {
+            $defaultCategories = [
+                ['name' => 'Food & Dining', 'type' => 'expense'],
+                ['name' => 'Transportation', 'type' => 'expense'],
+                ['name' => 'Housing', 'type' => 'expense'],
+                ['name' => 'Utilities', 'type' => 'expense'],
+                ['name' => 'Entertainment', 'type' => 'expense'],
+            ];
+
+            foreach ($defaultCategories as $category) {
+                Auth::user()->categories()->create($category);
+            }
+
+            $categories = Auth::user()->categories()
+                ->where('type', 'expense')
+                ->get();
+        }
+
         return view('expenses.create', compact('categories'));
     }
 
@@ -33,7 +51,7 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'type' => 'required|in:need,want,saving',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:255',
             'date' => 'required|date',
         ]);

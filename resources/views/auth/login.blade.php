@@ -131,6 +131,41 @@
             border-color: #DC2626;
         }
 
+        /* Add styles for password input container */
+        .password-input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-input-container .form-input {
+            padding-right: 45px; /* Make room for the icon */
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #64748B;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle-btn:hover {
+            color: #0A1B3F;
+        }
+
+        .password-toggle-btn:focus {
+            outline: none;
+        }
+
+        .password-toggle-btn .material-icons {
+            font-size: 20px;
+        }
+
         .brand-logo {
             width: 140px; /* Adjust size */
             margin-bottom: 1px; /* Space between logo and brand name */
@@ -162,19 +197,29 @@
         }
 
         .forgot-password {
-            text-align: center;
-            margin-top: 24px;
+            text-align: right;
+            margin-top: 8px;
+            margin-bottom: 24px;
         }
 
         .forgot-password a {
-            color: #64748B;
+            color: #0A1B3F;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 500;
             transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
         }
 
         .forgot-password a:hover {
-            color: #0A1B3F;
+            color: #4F8BFF;
+            text-decoration: underline;
+        }
+
+        .forgot-password .material-icons {
+            font-size: 16px;
+            margin-right: 4px;
         }
 
         @media (max-width: 768px) {
@@ -225,7 +270,13 @@
 
                     <div class="form-group">
                         <label for="email" class="form-label">Email</label>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus 
+                        <input id="email" 
+                            type="email" 
+                            name="email" 
+                            value="{{ old('email') }}" 
+                            required 
+                            autofocus 
+                            placeholder="Enter your email"
                             class="form-input @error('email') error @enderror">
                         @error('email')
                             <span class="error-message">{{ $message }}</span>
@@ -234,11 +285,30 @@
 
                     <div class="form-group">
                         <label for="password" class="form-label">Password</label>
-                        <input id="password" type="password" name="password" required 
-                            class="form-input @error('password') error @enderror">
+                        <div class="password-input-container">
+                            <input id="password" 
+                                type="password" 
+                                name="password" 
+                                required 
+                                class="form-input @error('password') error @enderror"
+                                placeholder="Enter your password" />
+                            <button type="button" 
+                                class="password-toggle-btn"
+                                onclick="togglePasswordVisibility('password')"
+                                title="Toggle password visibility">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
                         @error('password')
                             <span class="error-message">{{ $message }}</span>
                         @enderror
+                    </div>
+
+                    <div class="forgot-password">
+                        <a href="{{ route('password.request') }}">
+                            <span class="material-icons">lock_reset</span>
+                            Forgot your password?
+                        </a>
                     </div>
 
                     <div class="form-group">
@@ -256,14 +326,6 @@
                             Log in
                         </button>
                     </div>
-
-                    @if (Route::has('password.request'))
-                        <div class="forgot-password">
-                            <a href="{{ route('password.request') }}" class="text-sm text-gray-700 hover:text-gray-900">
-                                Forgot your password?
-                            </a>
-                        </div>
-                    @endif
                 </form>
 
                 <div class="register-link">
@@ -273,4 +335,26 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Password Toggle Script -->
+    <script>
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            const icon = button.querySelector('.material-icons');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+                button.title = 'Hide password';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+                button.title = 'Show password';
+            }
+        }
+    </script>
 </x-guest-layout>
